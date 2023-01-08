@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/book_details.css' %}"
+        xmlns="http://www.w3.org/1999/html">
+    <script type="text/javascript" src="{% static 'js/book_details.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+        <div class="product-detail-page">
+            <div class="details-container">
+                <div class="img-and-desc-div">
+                    <div class="img-div">
+                        <img src="{% if book.cover %}{{ book.cover }}{% else %}https://libribook.com/images/surgical-gynecology-case-based-approach-pdf.jpg{% endif %}" alt="{{book.title}}">
+                    </div>
+                    <div class="desc-div">
+                        <div class="desc-section" style="flex-direction: column">
+                            <h1>{{ book.title }}</h1>
+                            <div class="d-flex flex-column align-items-center w-100">
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <h4 style="text-align:left" class="author-text w-100">Valoración media:</h4>
+                                    {% if average_rating != 0 %}
+                                        <h4 style="text-align:right" class="author-text w-100">{{ average_rating|floatformat:2 }}/5.00</h4>
+                                    {% else %}
+                                        <h4 style="text-align:right" class="author-text w-100">No hay valoraciones</h4>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <h4 style="text-align:left" class="author-text w-100">Autor/es:</h4>
+                                    <h4 style="text-align:right" class="author-text w-100">{{ book.author }}</h4>
+                                </div>
+                                {% if book.collection %}
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <h4 style="text-align:left" class="author-text w-100">Colección:</h4>
+                                    <h4 style="text-align:right" class="author-text w-100"><a class="class-a-link" href="/?collection={{book.collection.id}}">{{ book.collection.name }}</a></h4>
+                                </div>
+                                {% endif %}
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <h4 style="text-align:left" class="author-text w-100">Editorial:</h4>
+                                    <h4 style="text-align:right" class="author-text w-100">{{ book.editorial }}</h4>
+                                </div>
+                                {% if categories %}
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <h4 style="text-align:left" class="author-text w-100">Categorías:</h4>
+                                    <h4 style="text-align:right" class="author-text w-100">
+                                        {% for category in categories %}
+                                            <a class="class-a-link" href="/?category={{category.id}}">{{ category.name }}</a>
+                                            {% if not forloop.last %}
+                                                <span>|</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </h4>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex flex-column align-items-center author-text mt-3">
+                                <h4 style="text-align:left" class="sinopsis-text w-100">Sinopsis:</h4>
+                                <div class="class-description">
+                                    {% if book.description %}
+                                        <p class="class-justify-description">{{ book.description }}</p>
+                                    {% else %}
+                                        <p class="class-justify-description">No hay sinopsis disponible para este libro.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="desc-section" id="buttons-section">
+                            {% if user.is_authenticated %}
+                                <div class="d-flex justify-content-center align-items-center w-100">
+                                    <button type="button"
+                                        class="add-to-cart-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#rate-modal-{{book.id}}">
+                                        Puntúalo
+                                    </button>
+                                </div>
+                            {% endif %}
+                            <button id="add-to-cart-btn" class="add-to-cart-btn" onclick="window.location = '{{book.url}}'">
+                                Ir a la web original
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="showcase-title">Otros libros que podrían interesarte</h3>
+
+                <showcase>
+                    {% for book in showcase_books %}
+
+                        <div class="showcase-element"> 
+                        
+                            <img src="/static/{{book.cover}}" alt="{{book.title}}" />
+                            <a href="/book/{{book.id}}" class="add-to-cart-btn">Ver detalles</a>
+
+                        </div>
+                
+                    {% endfor %}
+                </showcase>
+
+                <div class="comments-div">
+                    {% if user.is_authenticated %}
+                    <div class="d-flex align-items-center">
+                        <button class="add-to-cart-btn" data-bs-toggle="modal"
+                        data-bs-target="#comment-modal">Añade tu comentario</button>
+                    </div>
+                    {% endif %}
+                    <div class="comments-list">
+                        {% for comment in comments %}
+                            <div class="comment">
+                                <div class="comment-header d-flex align-items-center">
+                                    <img style="border-radius: 50px; margin-right: 5px;"
+                                            width="30px" height="30px"
+                                            alt="imagen de perfil"
+                                            {% if profile_pic %}
+                                            src="{{ profile_pic }}"
+                                            {% else %}
+                                            src="{% static 'images/profile.png' %}"
+                                            {% endif %}/>
+                                    <h4 class="comment-author mb-0" style="margin-right: 40px;">@{{ comment.user.username }}</h4>
+                                    <h4 class="comment-date">{{ comment.date }}</h4>
+                                </div>
+                                <div class="comment-body">
+                                    <p class="comment-text">{{ comment.text }}</p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="no-comment">
+                                <h3>No hay comentarios, ¡sé el primero en comentar!</h3>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% if user.is_authenticated %}
+                <div class="modal fade" id="comment-modal">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>¡Escribe tu comentario!</h2>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <form action="{% url 'app:add_comment' book.id %}" method="POST" id="post-comment-form">
+                                {% csrf_token %}
+                                <textarea id="comment-input" name="comment" value="" placeholder="Escribe tu comentario..."></textarea>
+                                <button class="add-to-cart-btn mt-3">Publicar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="rate-modal-{{book.id}}">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title"
+                                    id="add-to-cart-modal-label">
+                                    ¡Puntúalo ahora!</h2>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                        <form action="{% url 'app:add_rating' book.id %}" id="add-rate-{{book.id}}" class="modal-form" method="POST">
+                            {% csrf_token %} 
+                            <div class="d-flex flex-column align-items-center w-100">
+                                <div class="d-flex justify-content-center align-items-center w-100">
+                                    <label class="rating-label justify-content-center w-100">
+                                        <input
+                                        name="rating"
+                                        class="rating"
+                                        max="5"
+                                        oninput="this.style.setProperty('--value', `${this.valueAsNumber}`)"
+                                        step="1"
+                                        type="range"
+                                        style="cursor:pointer"
+                                        value="1"
+                                        >
+                                    </label>
+                                </div>
+
+                                <input type="submit"
+                                    class="add-to-cart-btn"
+                                    value="Valorar libro">
+                            </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+    </div>
+{% endblock %}

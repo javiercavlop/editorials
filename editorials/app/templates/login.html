@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<section>
+	<div class="main">
+		
+		{% if is_signin %}
+			<input type="checkbox" id="chk" aria-hidden="true" checked>
+		{% else %}
+			<input type="checkbox" id="chk">
+		{% endif %}
+
+			{% if are_errors %}
+				<div class="signup">
+				<form action="{% url 'app:signup' %}" method="POST" class="login-page-form">
+					{% csrf_token %}
+					<label for="chk" aria-hidden="true">Regístrate</label>
+					<input type="text" id="first_name_register" name="first_name" placeholder="Nombre" required="True" value="{{ first_name }}">
+					<input type="text" id="last_name_register" name="last_name" placeholder="Apellidos" required="True" value="{{ last_name }}">
+					<input type="text" id="username_register" name="username" placeholder="Usuario" required="True" value="{{ username }}">
+					<input type="email" id="email_register" name="email" placeholder="Email" required="True" value="{{ email }}">
+					<input type="password" id="password_register" name="password" placeholder="Contraseña" required="True">
+					<div style="display: flex; justify-content: center;">
+						<button type="submit" class="class-link">Regístrate</button>
+					</div>
+				</form>
+			</div>
+
+			{% else %}
+				<div class="signup">
+				<form action="{% url 'app:signup' %}" method="POST" class="login-page-form">
+					{% csrf_token %}
+					<label for="chk" aria-hidden="true">Regístrate</label>
+					<input type="text" id="first_name_register" name="first_name" placeholder="Nombre" required="True">
+					<input type="text" id="last_name_register" name="last_name" placeholder="Apellidos" required="True">
+					<input type="text" id="username_register" name="username" placeholder="Usuario" required="True">
+					<input type="email" id="email_register" name="email" placeholder="Email" required="True">
+					<input type="password" id="password_register" name="password" placeholder="Contraseña" required="True">
+					<div style="display: flex; justify-content: center;">
+						<button type="submit" class="class-link">Crear cuenta</button>
+					</div>
+					
+				</form>
+			</div>
+			{% endif %}
+
+			<div class="login">
+				<form action="{% url 'app:login' %}" method="POST" class="login-page-form">
+					{% csrf_token %}
+					<label for="chk" aria-hidden="true">Incia sesión</label>
+					<input type="text" id="username" name="username" placeholder="Username" required="True">
+					<input type="password" id="password" name="password" placeholder="Password" required="True">
+					<div style="display: flex; justify-content: center;">
+						<button type="submit" class="class-link">Entrar</button>
+					</div>
+				</form>
+			</div>
+	</div>
+	{% if are_errors %}
+	<div class="errors-div">
+		{% for error in errors %}
+			<p class="error" for="chk" aria-hidden="true">
+				{{ error }}
+			</p>
+		{% endfor %}
+	</div>	
+	{% endif %}
+</section>
+{% endblock %}

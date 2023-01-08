@@ -1,0 +1,135 @@
+:root{
+    --main-white: rgb(239, 251, 230);
+    --main-black: #111;
+    --main-color: rgb(36, 78, 4);
+    --main-button-background-color: white;
+    --main-button-hover-dark-color: rgb(43, 119, 8);
+    --main-button-hover-light-color: rgb(29, 177, 43);
+    --main-button-shadow-hover-color: rgba(0,0,0,0.4);
+    --card-background-color: rgba(2, 38, 4, 0.07);
+    --comment-separator-color: rgba(141, 141, 141, 0.525);
+    --heart-color: red;
+    --old-price-color: rgb(141, 141, 141);
+    --offer-price-color: rgb(174, 0, 0);
+    /* Text */
+
+    --text-black: black;
+    --text-white: white;
+    
+    /* Login */
+
+    --login-input-border-color: black;
+
+    /* Labels */
+
+    --main-label-color: #448a3b;
+    --main-label-dark-color: #0f4a07;
+
+    /* Filters */
+
+    --filters-button-text-color: rgb(106, 106, 106);
+    --filters-button-text-hover-color: rgb(163, 163, 163);
+    --filters-menu-background-color: white;
+    --filters-menu-header-border-color: rgb(163, 163, 163);
+
+    /* Rarities */
+
+    --common-background-color: rgba(255, 255, 255, 0.5);
+    --rare-background-color: rgba(0, 106, 255, 0.5);
+    --epic-background-color: rgba(140, 0, 255, 0.5);
+    --legendary-background-color: rgba(255, 208, 0, 0.5);
+    --mythic-background-color: rgba(197, 42, 42, 0.5);
+
+    --common-border-color: #ffffff;
+    --rare-border-color: #006aff;
+    --epic-border-color: #8c00ff;
+    --legendary-border-color: #ffd000;
+    --mythic-border-color: #c52a2a;
+
+    /* Modal Add Comment */
+
+    --modal-comment-background-button-color: #875794;
+    --modal-comment-text-color: #fff;
+    --modal-comment-background-color: rgba(69, 69, 69, 0.7);
+
+    /* Errors */
+    --error-message-background-color: rgba(239, 80, 80, 0.5);
+    --error-message-border-color: rgba(239, 80, 80, 1);
+    --register-error-message-font-color: rgb(0, 0, 0);
+    --register-error-message-background-color: rgba(255,255,255,0.5);
+
+    /* Profile */
+    --color-input: #303030;
+    --color-label: #5e5e5e;
+    --color-btn-disabled: #5757577e;
+    --color-error: #cc0033;
+    --color-error-background: #fce4e4;
+    --color-border-disabled: #706c6c;
+    
+    /* Stock */
+    --enough-stock-color: rgb(0, 203, 0);
+    --not-much-stock-color: orange;
+    --no-stock-color: red;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body{
+    height: 100%;
+}
+
+showcase{
+    width: 80vw;
+    height: 500px;
+    display: flex;
+    align-items: center;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    margin: 50px 0;
+    padding: 0px 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px var(--main-color); 
+}
+
+showcase::-webkit-scrollbar{
+    height: 7px;
+}
+
+showcase::-webkit-scrollbar-thumb{
+    background: var(--main-color);
+	border-radius: 5px;
+}
+
+.name-text-field{
+    text-transform: capitalize !important;
+}
+
+.without-stock{
+    filter: grayscale(100%);
+}
+
+.enough-stock, .not-much-stock, .no-stock{
+    width: 100%;
+    height: auto;
+    font-size: 1.2em;
+    font-weight: bolder;
+    text-align: center;
+    text-transform: uppercase;
+
+}
+
+.enough-stock{
+    color: var(--enough-stock-color) !important;
+}
+
+.not-much-stock{
+    color: var(--not-much-stock-color) !important;
+}
+
+.no-stock{
+    color: var(--no-stock-color) !important;
+}

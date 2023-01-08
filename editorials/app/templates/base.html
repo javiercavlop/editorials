@@ -1,0 +1,214 @@
+{% load static %}
+{% load mathfilters %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Editorials</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/vnd.microsoft.icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+            crossorigin="anonymous"></script>
+        
+    <script type="text/javascript" src="{% static 'js/base.js' %}"></script>
+
+    {% block extrahead %}
+    {% endblock %}
+</head>
+
+<body>
+<!-- Header -->
+<header id="header" style="position: sticky; z-index:100; top: 0; width: 100%; border-bottom: 1px solid darkgreen">
+    <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'app:index' %}"><img alt="Editorials" width="150px" src="{% static 'images/logo.png' %}"></a>
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarToggler"
+                    aria-controls="navbarToggler" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarToggler"
+                 style="justify-content: space-between; width: 100%">
+                <div class="d-flex w-100 justify-content-center">
+                    <form class="d-flex class-search-form" role="search"
+                          action="{% url 'app:index' %}">
+                        <input class="form-control me-2" type="search"
+                               placeholder="Buscar"  aria-label="Search" title="Busque por título, autor o editorial"
+                               name="buscar" required>
+                        <button class="btn btn-outline-success" type="submit">
+                            Buscar
+                        </button>
+                    </form>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <ul class="navbar-nav w-100">
+                        {% if user.is_authenticated %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle"
+                                   role="button" data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    <img style="border-radius: 50px"
+                                         width="30px" height="30px"
+                                         alt="imagen de perfil"
+                                         {% if profile_pic %}
+                                         src="{{ profile_pic }}"
+                                         {% else %}
+                                         src="{% static 'images/profile.png' %}"
+                                         {% endif %}/> {{ request.user.username }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item"
+                                           href="{% url 'app:profile' %}">
+                                           <img height="20px" width="20px" src="{% static 'images/perfil-icon.png' %}" alt="Perfil"/>  Perfil
+                                        </a>
+                                    </li>
+                                    <li><a class="dropdown-item"
+                                            href="{% url 'scraper:search' %}">
+                                            <img height="20px" width="20px" src="{% static 'images/clue.png' %}" alt="Buscador"/>  Búsqueda avanzada
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    {% if request.user.is_superuser %}
+                                        <li><button class="dropdown-item"
+                                            onclick="populateDB('{% url 'scraper:populate' %}')">
+                                                <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Extrae los libros de todas las editoriales
+                                            </button>
+                                        </li>
+                                        <li><button class="dropdown-item"
+                                            onclick="populateDB('{% url 'scraper:populate_planeta' %}')">
+                                                <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Extrae libros de Planeta de Libros
+                                            </button>
+                                        </li>
+                                        <li><button class="dropdown-item"
+                                            onclick="populateDB('{% url 'scraper:populate_penguin' %}')">
+                                             <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Extrae libros de Penguin Random House
+                                            </button>
+                                        </li>
+                                        <li><button class="dropdown-item"
+                                            onclick="populateDB('{% url 'scraper:populate_sm' %}')">
+                                             <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Extrae libros de Ediciones SM
+                                            </button>
+                                        </li>
+                                        <li><button class="dropdown-item"
+                                            onclick="populateDB('{% url 'scraper:populate_alianza' %}')">
+                                             <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Extrae libros de Alianza Editorial
+                                            </button>
+                                        </li>
+                                        <li><button class="dropdown-item"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#scrape-modal">
+                                             <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Extrae un libro por url
+                                            </button>
+                                        </li>
+                                        <li><button class="dropdown-item"
+                                            onclick="deleteDB('{% url 'scraper:clear' %}', '{{all_books_size}}')">
+                                             <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Borra la base de datos
+                                            </button>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                    {% endif %}
+
+                                    <li><a class="dropdown-item"
+                                           href="{% url 'app:signout' %}">
+                                           <img height="20px" width="20px" src="{% static 'images/logout-icon.png' %}" alt="Cerrar Sesión"/> Cerrar sesión
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <li class="nav-item">
+                                    <button type="button" class="btn class-btn"
+                                            style="min-width: 125px" onclick="window.location.href='{% url 'app:signin' %}'">
+                                        Iniciar sesión
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button type="button"
+                                            class="btn class-btn"
+                                            onclick="window.location.href='{% url 'app:signup' %}'">
+                                        Registrarse
+                                    </button>
+                                </li>
+                            </div>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Error messages -->
+{% if messages %}
+    <div class="class-alert">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Content -->
+{% block content %}
+{% endblock %}
+
+{% if request.user.is_superuser %}
+<div class="modal fade" id="scrape-modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                    <h5 class="modal-title"
+                        id="add-book-modal-label">
+                        Añade un libro mediante URL:</h5>
+                    <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="class-profile-form">
+                <form class="class-custom-form" action="{% url 'scraper:populate_one' %}" id="add-book" method="POST">
+                    {% csrf_token %} 
+                    <div class="d-flex flex-column align-items-center w-100">
+                        {% if url_errors %}
+                        <div class="class-form-group w-75 class-error-form" id="url_form">
+                        {% else %}
+                        <div class="class-form-group w-75" id="url_form">
+                        {% endif %}
+                            <input class="class-form-input"type="url" id="url" name="url" placeholder=" " value="{{ url }}" required>
+                            <label for="url" class="class-form-label">Url del libro a extraer:</label>
+                            {% if url_errors %}
+                                {% for error in url_errors %}
+                                    <span class="class-error-message">{{error}}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="d-flex align-items-center justify-content-center class-profile-div-btn">
+                            <button id="url-btn" class="class-link class-profile-btn mt-4 mb-3" type="submit">Añadir libro</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+</html>

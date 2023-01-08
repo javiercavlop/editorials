@@ -1,0 +1,340 @@
+.product-detail-page{
+    background-color: var(--main-white);
+    display: flex;
+    justify-content: center;
+    padding-top: 5% !important;
+}
+
+.details-container{
+    position: relative;
+    width: 100%;
+    padding: 30px 5%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.img-and-desc-div{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.img-div{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.desc-div, .comments-list{
+    box-shadow: 0 10px 25px var(--main-color);
+    border-radius: 15px;
+}
+
+#price, #old-price, #offer-price{
+    font-family: 'Lucida Sans';
+}
+
+#price{
+    font-weight: bolder;
+}
+
+#old-price{
+    text-decoration: line-through;
+    color: var(--old-price-color);
+}
+
+#offer-price{
+    color: var(--offer-price-color);
+    font-weight: bolder;
+}
+
+.desc-div{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.desc-section{
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--main-button-background-color);
+    border-radius: 20px;
+}
+
+.desc-section h1{
+    font-size: 3rem;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+.desc-section h2{
+    margin-left: 30px;
+    font-size: 2rem;
+    text-align: center;
+}
+
+.desc-section h4{
+    text-align: center;
+}
+
+.desc-section span{
+    font-size: 1.5rem;
+}
+
+.colecction-text, .rarity-text, .author-text{
+    padding: 2px 10px;
+}
+
+.input-cantidad{
+    box-shadow: -3px -3px 7px var(--main-color), 3px 3px 4px var(--main-color);
+    border-radius: 10px;
+    width: 60px;
+    text-align: center;
+    margin-left: 10px;
+}
+
+.desc-section button{
+    padding: 10px 30px;
+    margin: 0 30px;
+    border-radius: 15px;
+    background: var(--main-button-background-color);
+}
+
+.desc-section button:hover{
+    background: linear-gradient(to bottom, var(--main-button-hover-dark-color), var(--main-button-hover-light-color));
+}
+
+.desc-section button i{
+    margin-left: 10px;
+}
+
+.desc-section button .heart{
+    color: var(--heart-color);
+}
+
+.comments-div{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 50px;
+}
+
+.new-comment-button{
+    padding: 20px;
+    background: var(--main-button-background-color);
+    border-radius: 15px;
+    text-transform: uppercase;
+    font-size: 1.2rem;
+}
+
+.new-comment-button:hover{
+    background: linear-gradient(to bottom, var(--main-button-hover-dark-color), var(--main-button-hover-light-color));
+}
+
+.comments-list{
+    width: 100%;
+    margin-top: 30px;
+    overflow-y: scroll;
+    background-color: var(--main-button-background-color);
+    border-radius: 20px;
+}
+
+.comment{
+    width: 100%;
+    padding: 0 20px;
+    padding-top: 20px;
+    padding-bottom: 0;
+    border-bottom: 2px solid var(--comment-separator-color);
+}
+
+.comment-text{
+    text-align: justify;
+    word-wrap: break-word;
+}
+
+.no-comment{
+    padding: 30px 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#post-comment-form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.front-3d h2{
+    margin-bottom: 20px;
+}
+
+#comment-input{
+    width: 100%;
+    min-height: 100px;
+}
+
+.publish-comment-button{
+    padding: 10px 30px;
+    margin-top: 20px;
+    border-radius: 15px;
+    background: var(--main-button-background-color);
+}
+
+.publish-comment-button:hover{
+    background: linear-gradient(to bottom, var(--main-button-hover-dark-color), var(--main-button-hover-light-color));
+}
+
+.comments-list::-webkit-scrollbar{
+    width: 7px;
+}
+
+.comments-list::-webkit-scrollbar-thumb{
+    background: var(--main-color);
+	border-radius: 5px;
+}
+
+.showcase-title{
+    text-align: center;
+    margin-top: 100px;
+    font-weight: bolder;
+}
+
+.class-description{
+    overflow: scroll;
+    overflow-x: hidden;
+	height: 30vh;
+    scrollbar-width: none;
+    -ms-overflow-style: none; 
+}
+
+.class-address-list::-webkit-scrollbar{
+    width: 7px;
+}
+
+.class-address-list::-webkit-scrollbar-thumb{
+    background: var(--main-color);
+	border-radius: 5px;
+}
+
+@media screen and (min-width: 1100px) {
+
+    .img-div{
+        width: 45%;
+    }
+
+    .img-div img{
+        max-width: 25vw;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1/2;
+        object-fit: contain;
+    }
+
+    .desc-div{
+        width: 45%;
+    }
+
+    #modal-flip-from-left {
+        height: 500px;
+        width: 700px;
+    }
+
+    .new-comment-button{
+        width: 20%;
+    }
+
+    .comments-list{
+        height: 400px;
+    }
+
+    #buttons-section{
+        padding: 20px 10%;
+    }
+
+    .comment-header{
+        display: flex;
+        flex-direction: row;
+    }
+
+    .comment-header h4{
+        font-size: 1em;
+    }
+
+    .comment-body p{
+        font-size: 1.2em;
+    }
+}
+
+@media screen and (max-width: 1100px) {
+    .img-and-desc-div{
+        flex-direction: column;
+        justify-content: start;
+    }
+
+    .img-div{
+        width: 98%;
+    }
+
+    .img-div img{
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    #modal-flip-from-left {
+        height: 400px;
+        width: 100%;
+    }
+
+    .desc-div{
+        width: 98%;
+        margin-top: 30px;
+    }
+
+    .new-comment-button{
+        width: 40%;
+    }
+
+    .comments-list{
+        height: 400px;
+    }
+}
+
+.class-a-link{
+    text-decoration: none;
+    color: inherit;
+}
+
+.class-a-link:hover{
+    color: var(--text-black);
+    text-decoration: underline;
+}
+
+@media screen and (max-width: 450px) {
+    .new-comment-button{
+        width: 100%;
+    }
+}
+
+.cart-icon{
+    height: 25px;
+    width: 25px;
+}
+
+.heart-icon{
+    height: 25px;
+    width: 25px;
+}

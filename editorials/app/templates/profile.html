@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+	<script type="text/javascript" src="{% static 'js/profile.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<section>
+	<body>
+		<div class="main">
+			<div class="class-profile-form">
+				<form class="class-form" action="{% url 'app:profile' %}" method="POST">
+					{% csrf_token %}
+					<div class="d-flex justify-content-center align-items-center">
+						<h1>Edita tu perfil</h1>
+					</div>
+					<div class="d-flex justify-content-center align-items-center">
+						<img alt="Foto de perfil" id="profile_pic_img" class="class-profile-img" 
+						{% if profile_pic %}
+						src="{{ profile_pic }}"
+						{% else %}
+						src="{% static 'images/profile.png' %}"
+						{% endif %}/>
+					</div>
+					{% if profile_pic_errors %}
+					<div class="class-form-group class-error-form" id="profile_pic_form">
+					{% else %}
+					<div class="class-form-group" id="profile_pic_form">
+					{% endif %}
+						<input class="class-form-input" type="text" id="profile_pic" name="profile_pic" placeholder=" " value="{{ profile_picture }}">
+						<label for="profile_pic" class="class-form-label">URL de la foto de perfil:</label>
+						{% if profile_pic_errors %}
+							{% for error in profile_pic_errors %}
+								<span class="class-error-message">{{error}}</span>
+							{% endfor %}
+						{% endif %}
+					</div>
+					{% if name_errors %}
+					<div class="class-form-group class-error-form" id="first_name_form">
+					{% else %}
+					<div class="class-form-group" id="first_name_form">
+					{% endif %}
+						<input class="class-form-input" type="text" id="first_name" name="first_name" placeholder=" " value="{{ first_name }}" required>
+						<label for="first_name" class="class-form-label">Nombre:</label>
+						{% if name_errors %}
+							{% for error in name_errors %}
+								<span class="class-error-message">{{error}}</span>
+							{% endfor %}
+						{% endif %}
+					</div>
+					{% if surname_errors %}
+					<div class="class-form-group class-error-form" id="last_name_form">
+					{% else %}
+					<div class="class-form-group" id="last_name_form">
+					{% endif %}
+						<input class="class-form-input" type="text" id="last_name" name="last_name" placeholder=" " value="{{ last_name }}" required>
+						<label for="last_name" class="class-form-label">Apellidos:</label>
+						{% if surname_errors %}
+							{% for error in surname_errors %}
+								<span class="class-error-message">{{error}}</span>
+							{% endfor %}
+						{% endif %}
+					</div>
+					{% if username_errors %}
+					<div class="class-form-group class-error-form" id="username_form">
+					{% else %}
+					<div class="class-form-group" id="username_form">
+					{% endif %}
+						<input class="class-form-input"type="text" id="username" name="username" placeholder=" " value="{{ username }}" required>
+						<label for="username" class="class-form-label">Usuario:</label>
+						{% if username_errors %}
+							{% for error in username_errors %}
+								<span class="class-error-message">{{error}}</span>
+							{% endfor %}
+						{% endif %}
+					</div>
+					{% if email_errors %}
+					<div class="class-form-group class-error-form" id="email_form">
+					{% else %}
+					<div class="class-form-group" id="email-form">
+					{% endif %}
+						<input class="class-form-input" type="email" id="email" name="email" placeholder=" " required="" value="{{ email }}" required>
+						<label for="email" class="class-form-label">Email:</label>
+						{% if email_errors %}
+							{% for error in email_errors %}
+								<span class="class-error-message">{{error}}</span>
+							{% endfor %}
+						{% endif %}
+					</div>
+					<div class="d-flex align-items-center class-profile-div-btn">
+						<button id="profile_btn" class="class-link class-profile-btn" type="submit">Actualizar datos</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</body>
+</section>
+{% endblock %}
