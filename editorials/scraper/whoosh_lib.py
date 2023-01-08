@@ -17,10 +17,10 @@ COMMENT_SCHEMA = fields.Schema(text=fields.TEXT, id=fields.ID(stored=True, uniqu
 def create_index(sender=None, **kwargs):
     if not os.path.exists(settings.WHOOSH_INDEX_BOOK):
         os.makedirs(settings.WHOOSH_INDEX_BOOK, exist_ok=True)
-        ix = index.create_in(settings.WHOOSH_INDEX_BOOK, schema=BOOK_SCHEMA)
+        index.create_in(settings.WHOOSH_INDEX_BOOK, schema=BOOK_SCHEMA)
     if not os.path.exists(settings.WHOOSH_INDEX_COMMENT):
         os.makedirs(settings.WHOOSH_INDEX_COMMENT, exist_ok=True)
-        ix = index.create_in(settings.WHOOSH_INDEX_COMMENT, schema=COMMENT_SCHEMA)
+        index.create_in(settings.WHOOSH_INDEX_COMMENT, schema=COMMENT_SCHEMA)
 
 signals.post_migrate.connect(create_index)
 
@@ -31,9 +31,9 @@ def new_book(sender, instance, created, **kwargs):
     categories = ""
     for category in instance.categories.all():
         if category == instance.categories.last():
-            categories += category.name
+            categories += category.name.lower()
         else:
-            categories += category.name + " "
+            categories += category.name.lower() + " "
     
     collection = ""
     if instance.collection:

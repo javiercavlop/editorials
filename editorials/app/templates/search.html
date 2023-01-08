@@ -190,7 +190,7 @@
                 <h1 class="mt-5">NO SE ENCONTRARON RESULTADOS</h1>
                 <h2>PRUEBE A CAMBIAR LOS PARÁMETROS DE BÚSQUEDA</h2>
             </div>
-        {% elif books_size != 1 %}
+        {% elif books_size != None %}
             <div class="d-flex justify-content-center align-items-center mt-5">
                 <h1 class="mt-5">MOSTRANDO {{books_size}} RESULTADO{% if books_size != 1 %}S{% endif %}</h1>
             </div>

@@ -17,7 +17,7 @@ from whoosh import index, fields
 from whoosh.qparser import QueryParser, MultifieldParser, OrGroup, AndGroup
 from whoosh.query import Term, Or, And, Not
 from .whoosh_lib import BOOK_SCHEMA, COMMENT_SCHEMA
-import threading
+import threading, shutil
 
 # ------------------------ Constants ------------------------
 
@@ -181,7 +181,6 @@ def populate_one(request):
         if not final_scraper:
             URL_ERRORS[user.username+'url_errors'] = ["La url no es válida"]
             URL_ERRORS[user.username+'url'] = url
-            messages.error(request, "La url no es válida")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
              
         result = None       
@@ -212,6 +211,8 @@ def clear_db(request):
         Category.objects.all().delete()
         Rating.objects.all().delete()
         Comment.objects.all().delete()
+        shutil.rmtree(settings.WHOOSH_INDEX_BOOK, ignore_errors=True)
+        shutil.rmtree(settings.WHOOSH_INDEX_COMMENT, ignore_errors=True)
     except Exception:
         messages.error(request, "Error al borrar los datos")
     finally:
@@ -223,13 +224,21 @@ def clear_db(request):
 def search(request):
     result = []
     books_size = None
-    form = create_form(request)
     
     if not request.user.is_authenticated:
         messages.error(request, "Debes estar registrado para acceder a esta página")
         return HttpResponseRedirect(reverse("app:signup"))
     
+    form = create_form(request)
+            
     if request.method == "POST":
+        
+        empty = True
+        for key in form:
+            if form[key]:
+                empty = False
+        if empty:
+            return render(request,  'search.html', {'books': result, 'max_books': MAX_VALUES, 'books_size': books_size, "form":form})
         
         ix_book = index.open_dir(settings.WHOOSH_INDEX_BOOK, schema=BOOK_SCHEMA)
         ix_comment = index.open_dir(settings.WHOOSH_INDEX_COMMENT, schema=COMMENT_SCHEMA)
@@ -250,57 +259,69 @@ def search(request):
         if collection_query: multi_query.append(collection_query)
         if categories_query: multi_query.append(categories_query)
         
-        comments_query = None
         comments_not_query = None
+        not_queries = None
+        all_query = None
+        exact_query = None
+        or_query = None
         if comments:
-            comments_query, comments_not_query = comments
+            all_query, exact_query, or_query, not_queries, comments_not_query = comments
         
         books = None
-        if multi_query:
-            multi_query = multi_query if len(multi_query)>1 else multi_query[0]
-            print(multi_query)
-            #FALLA CUANDO INTENTO HACER UNA CONSULTA MÚLTIPLE 'list' object has no attribute 'matcher'
-            book_searcher = ix_book.searcher()
-            book_hits = book_searcher.search(multi_query)
-            if book_hits.docs():
-                hits = [int(hit['id']) for hit in book_hits]
-                books = Book.objects.filter(id__in=hits)
-            else:
+        
+        for query in multi_query:
+            books = get_book_hits(ix_book, query, books)
+            if books and isinstance(books, bool):
                 books = Book.objects.none()
+                break
         
-        comment_books = None
-        not_hits_books = None
-        if comments_query:
-            comment_searcher = ix_comment.searcher()
-            comment_hits = comment_searcher.search(comments_query)
-            if comments_not_query:
-                comment_not_hits = comment_searcher.search(comments_not_query)
-            if comment_hits.docs():
-                hits = [int(hit['id']) for hit in comment_hits]
-                if comments_not_query and comment_not_hits.docs():
-                    not_hits = [int(hit['id']) for hit in comment_not_hits]
-                    not_hits_books = Comment.objects.filter(id__in=not_hits).values_list('book', flat=True)
-                comment_books = Comment.objects.filter(id__in=hits).values_list('book', flat=True)
+        queries = [all_query, exact_query, or_query, not_queries, comments_not_query]
+        all_hits, exact_hits, any_hits, not_hits, not_hits_books = get_comment_hits(queries, ix_comment)
+        hits = Comment.objects.none() if comments else None
+        
+        if all_hits:
+            hits = all_hits
+            
+        if exact_hits:
+            if hits:
+                hits = hits.filter(id__in=exact_hits)
             else:
-                comment_books = Comment.objects.none()
+                hits = exact_hits
         
-        if books and comment_books:
-            result = books.filter(id__in=comment_books)
-        elif books and not isinstance(comment_books, type(Comment.objects.none())):
+        if not_hits:
+            if hits:
+                hits = hits.exclude(id__in=not_hits)
+            else:
+                hits = Book.objects.all().exclude(id__in=not_hits)
+        
+        if any_hits:
+            if not_hits:
+                any_hits = any_hits.exclude(id__in=not_hits)
+            if hits:
+                hits = hits.union(any_hits)
+            else:
+                hits = any_hits     
+                
+        
+        if books and hits:
+            result = books.filter(id__in=hits)
+        elif books and not isinstance(hits, type(Comment.objects.none())):
                 result = books
-        elif comment_books and not isinstance(books, type(Book.objects.none())):
-                result = Book.objects.filter(id__in=comment_books)
+        elif hits and not isinstance(books, type(Book.objects.none())):
+                result = Book.objects.filter(id__in=hits)
         
         if not_hits_books and result:
             result = result.exclude(id__in=not_hits_books)
+            if any_hits:
+                result = result.union(any_hits)
         
         try:
             max_books = int(str(request.POST['max_books']).strip())
         except ValueError:
-            max_books = 10
+            max_books = MAX_VALUES[0]
         
         if max_books not in MAX_VALUES:
-            max_books = 10
+            max_books = MAX_VALUES[0]
         
         if result:
             result = result[:max_books]
@@ -313,32 +334,63 @@ def create_query_part(ix, field, query_all, query_exact, query_any, query_not, c
     
     queries = []
     
+    all_query = False
     if query_all:
         query = [QueryParser(field, ix.schema).parse(q) for q in query_all.split(" ") if q.strip()]
-        queries.append(And(query))
-                    
+        all_query = And(query)
+        queries.append(all_query)
+    
+    exact_query = False     
     if query_exact:
-        queries.append(QueryParser(field, ix.schema).parse('"'+query_exact+'"'))
-        
+        exact_query = QueryParser(field, ix.schema).parse('"'+query_exact+'"')
+        queries.append(exact_query)
+    
+    or_queries = False
     if query_any:
         query = [QueryParser(field, ix.schema).parse(q) for q in query_any.split(" ") if q.strip()]
-        queries.append(Or(query))
+        or_queries = Or(query)
 
-        
+    not_queries = False
     if query_not:
         query = [Not(QueryParser(field, ix.schema).parse(q)) for q in query_not.split(" ") if q.strip()]
-        queries.append(Or(query))
+        not_queries = Or(query)
+        queries.append(not_queries)
     
-    if queries:
+    if queries or or_queries:
         if comments:
-            if query_not:
-                return And(queries), Or([QueryParser(field, ix.schema).parse(q) for q in query_not.split(" ") if q.strip()])
-            else:
-                return And(queries), None
-        return And(queries)
+            return all_query, exact_query, or_queries, not_queries, Or([QueryParser(field, ix.schema).parse(q) for q in query_not.split(" ") if q.strip()])
+        return get_final_query(queries, or_queries, not_queries)
     else:
         return None
     
+def get_comment_hits(queries, ix_comment):
+    hits_results = []
+    for query in queries:
+        if query:
+            comment_searcher = ix_comment.searcher()
+            comment_hits = comment_searcher.search(query)
+            if comment_hits.docs():
+                hits = [int(hit['id']) for hit in comment_hits]
+                comment_books = Comment.objects.filter(id__in=hits).values_list('book', flat=True)
+            else:
+                comment_books = None
+        else:
+            comment_books = None
+        hits_results.append(comment_books)
+        
+    return hits_results
+
+def get_final_query(queries, or_queries, not_queries):
+    if queries and or_queries and not_queries:
+        return Or(And(queries), And(or_queries, not_queries))
+    elif queries and or_queries:
+        return Or(And(queries), or_queries)
+    elif queries:
+        return And(queries)
+    elif or_queries:
+        return or_queries
+
+
 def create_form(request):
     description_all = request.POST['description_all'].strip() if 'description_all' in request.POST else ""
     description_exact = request.POST['description_exact'].strip() if 'description_exact' in request.POST else ""
@@ -370,9 +422,9 @@ def create_form(request):
     collection_any = request.POST['collection_any'].strip() if 'collection_any' in request.POST else ""
     collection_not = request.POST['collection_not'].strip() if 'collection_not' in request.POST else ""
     
-    categories_all = request.POST['categories_all'].strip() if 'categories_all' in request.POST else ""
-    categories_any = request.POST['categories_any'].strip() if 'categories_any' in request.POST else ""
-    categories_not = request.POST['categories_not'].strip() if 'categories_not' in request.POST else ""
+    categories_all = request.POST['categories_all'].lower().strip() if 'categories_all' in request.POST else ""
+    categories_any = request.POST['categories_any'].lower().strip() if 'categories_any' in request.POST else ""
+    categories_not = request.POST['categories_not'].lower().strip() if 'categories_not' in request.POST else ""
     
     form = {
         "description_all": description_all,
@@ -404,3 +456,16 @@ def create_form(request):
         "categories_not": categories_not,
     }
     return form
+
+def get_book_hits(ix_book, query, books):
+    book_searcher = ix_book.searcher()
+    book_hits = book_searcher.search(query)
+    if book_hits.docs():
+        hits = [int(hit['id']) for hit in book_hits]
+        if books:
+            books = books.filter(id__in=hits)
+        else:  
+            books = Book.objects.filter(id__in=hits)
+    else:
+        books = True
+    return books

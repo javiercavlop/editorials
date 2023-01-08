@@ -209,6 +209,12 @@
         </div>
     </div>
 </div>
+<script>
+    if("{{ url_errors }}" !== "[]"){
+        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('scrape-modal'))
+        modal.show();
+    }
+</script>
 {% endif %}
 
 </html>

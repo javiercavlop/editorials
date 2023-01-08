@@ -15,3 +15,4 @@ def global_context(request):
                 del URL_ERRORS[user.username+'url_errors']
                 
             return {'url': url, 'url_errors': url_errors}
+    return {}

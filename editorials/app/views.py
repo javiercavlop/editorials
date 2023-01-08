@@ -31,9 +31,10 @@ def index(request):
         warning = True
         messages.warning(request, "No hay libros en la base de datos")
     
-    all_books_size = books.count()
-    
-    books = filter_books(request, books)
+    if books:
+        all_books_size = books.count()
+        
+        books = filter_books(request, books)
     
     if not books and not warning:
         warning = True
