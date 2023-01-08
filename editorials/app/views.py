@@ -11,6 +11,7 @@ from django.urls import reverse
 # ------------------------ Constants ------------------------
 
 MAX_BOOKS_PER_PAGE = 16
+MAX_PAGES = 5
 PROFILE_ERRORS = {}
 
 # ------------------------ Helpers ------------------------
@@ -75,6 +76,8 @@ def index(request):
                    page_number * MAX_BOOKS_PER_PAGE + MAX_BOOKS_PER_PAGE):
         if i < len(books):
             books_to_list.append(books[i])
+    
+    max_range, min_range = get_limits_pages(page_number, possible_pages)
 
                 
     showcase_books = []
@@ -89,12 +92,30 @@ def index(request):
                                                   "books": books_to_list,
                                                   "showcase_books": showcase_books,
                                                   "pages_range": range(0, possible_pages),
+                                                  "max_range": max_range,
+                                                  "min_range": min_range,
                                                   "current_page": page_number,
                                                   "needs_pagination": possible_pages > 1,
                                                   "collections": collections,
                                                   "categories": categories,
                                                   }
                   )
+
+def get_limits_pages(page_number, possible_pages):
+    max_range = page_number+MAX_PAGES if page_number+MAX_PAGES <= possible_pages else possible_pages
+    min_range = page_number-MAX_PAGES if page_number-MAX_PAGES > 0 else 0
+    
+    if max_range-min_range != MAX_PAGES*2:
+        if (max_range - page_number) < MAX_PAGES:
+            min_range -= MAX_PAGES - (max_range-page_number)
+            min_range = min_range if min_range > 0 else 0
+        
+        if (page_number - min_range) < MAX_PAGES:
+            max_range += MAX_PAGES - (page_number-min_range)-1
+            max_range = max_range if max_range <= possible_pages else possible_pages
+    
+    return max_range, min_range
+        
 
 def filter_books(request, books):
     

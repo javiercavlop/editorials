@@ -118,29 +118,17 @@
                       <li class="d-flex justify-content-center align-items-center">
                           <button style="border:none" class="btn" onclick="previousPage({{pages_range.start}}, {{pages_range.stop}})">Anterior</button>
                       </li>
-                      {% for i in pages_range %}
-                        {% if page.range.stop != 10 %}
-
-                            {% if i == current_page %}
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}, {{pages_range.start}}, {{pages_range.stop}})" class="active">{{ i | addition:1 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+1, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:2 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+2, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:3 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+3, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:4 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+4, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:5 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+5, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:6 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+6, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:7 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+7, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:8 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+8, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:9 }}</a></li>
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}+9, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:10 }}</a></li>
-                            {% endif %}
-                        {%else%}
+                        {% for i in pages_range %}
                             {% if i == current_page %}
                                 <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}, {{pages_range.start}}, {{pages_range.stop}})" class="active">{{ i | addition:1 }}</a></li>
                             {% else %}
-                                <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:1 }}</a></li>
+                                {% if min_range < i and i < max_range %}
+                                    <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:1 }}</a></li>
+                                {% elif min_range == 0 and i == 0 %}
+                                    <li class="class-page" style="cursor: pointer;"><a onclick="moveToPage({{i}}, {{pages_range.start}}, {{pages_range.stop}})">{{ i | addition:1 }}</a></li>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                      {% endfor %}
+                        {% endfor %}
                       <li class="d-flex justify-content-center align-items-center">
                           <button style="border:none" class="btn" onclick="nextPage({{pages_range.start}}, {{pages_range.stop}})">Siguiente</button>
                       </li>

@@ -18,6 +18,7 @@ from whoosh.qparser import QueryParser, MultifieldParser, OrGroup, AndGroup
 from whoosh.query import Term, Or, And, Not
 from .whoosh_lib import BOOK_SCHEMA, COMMENT_SCHEMA
 import threading, shutil
+from app.views import MAX_BOOKS_PER_PAGE, MAX_PAGES
 
 # ------------------------ Constants ------------------------
 
@@ -223,112 +224,151 @@ def clear_db(request):
 # ------------------------ Whoosh ------------------------
 def search(request):
     result = []
+    books_to_list = []
     books_size = None
+    possible_pages = len(result)
+    max_range = None
+    min_range = None
+    page_number = None
     
     if not request.user.is_authenticated:
         messages.error(request, "Debes estar registrado para acceder a esta página")
         return HttpResponseRedirect(reverse("app:signup"))
     
     form = create_form(request)
-            
-    if request.method == "POST":
         
-        empty = True
-        for key in form:
-            if form[key]:
-                empty = False
-        if empty:
-            return render(request,  'search.html', {'books': result, 'max_books': MAX_VALUES, 'books_size': books_size, "form":form})
+    empty = True
+    for key in form:
+        if form[key]:
+            empty = False
+    if empty:
+        return render(request,  'search.html', {'books': result, 'max_books': MAX_VALUES, 'books_size': books_size, "form":form})
+    
+    ix_book = index.open_dir(settings.WHOOSH_INDEX_BOOK, schema=BOOK_SCHEMA)
+    ix_comment = index.open_dir(settings.WHOOSH_INDEX_COMMENT, schema=COMMENT_SCHEMA)
+    
+    description_query = create_query_part(ix_book, "description", form["description_all"], form["description_exact"], form["description_any"], form["description_not"])
+    comments = create_query_part(ix_comment, "text", form["comments_all"], form["comments_exact"], form["comments_any"], form["comments_not"], True)
+    title_query = create_query_part(ix_book, "title", form["title_all"], form["title_exact"], form["title_any"], form["title_not"])
+    author_query = create_query_part(ix_book, "author", form["author_all"], form["author_exact"], form["author_any"], form["author_not"])
+    editorial_query = create_query_part(ix_book, "editorial", form["editorial_all"], form["editorial_exact"], form["editorial_any"], form["editorial_not"])
+    collection_query = create_query_part(ix_book, "collection", form["collection_all"], form["collection_exact"], form["collection_any"], form["collection_not"])
+    categories_query = create_query_part(ix_book, "categories", form["categories_all"], None, form["categories_any"], form["categories_not"])
+    
+    multi_query = []
+    if description_query: multi_query.append(description_query)
+    if title_query: multi_query.append(title_query) 
+    if author_query: multi_query.append(author_query)
+    if editorial_query: multi_query.append(editorial_query)
+    if collection_query: multi_query.append(collection_query)
+    if categories_query: multi_query.append(categories_query)
+    
+    comments_not_query = None
+    not_queries = None
+    all_query = None
+    exact_query = None
+    or_query = None
+    if comments:
+        all_query, exact_query, or_query, not_queries, comments_not_query = comments
+    
+    books = None
+    
+    for query in multi_query:
+        books = get_book_hits(ix_book, query, books)
+        if books and isinstance(books, bool):
+            books = Book.objects.none()
+            break
+    
+    queries = [all_query, exact_query, or_query, not_queries, comments_not_query]
+    all_hits, exact_hits, any_hits, not_hits, not_hits_books = get_comment_hits(queries, ix_comment)
+    hits = Comment.objects.none() if comments else None
+    
+    if all_hits:
+        hits = all_hits
         
-        ix_book = index.open_dir(settings.WHOOSH_INDEX_BOOK, schema=BOOK_SCHEMA)
-        ix_comment = index.open_dir(settings.WHOOSH_INDEX_COMMENT, schema=COMMENT_SCHEMA)
-        
-        description_query = create_query_part(ix_book, "description", form["description_all"], form["description_exact"], form["description_any"], form["description_not"])
-        comments = create_query_part(ix_comment, "text", form["comments_all"], form["comments_exact"], form["comments_any"], form["comments_not"], True)
-        title_query = create_query_part(ix_book, "title", form["title_all"], form["title_exact"], form["title_any"], form["title_not"])
-        author_query = create_query_part(ix_book, "author", form["author_all"], form["author_exact"], form["author_any"], form["author_not"])
-        editorial_query = create_query_part(ix_book, "editorial", form["editorial_all"], form["editorial_exact"], form["editorial_any"], form["editorial_not"])
-        collection_query = create_query_part(ix_book, "collection", form["collection_all"], form["collection_exact"], form["collection_any"], form["collection_not"])
-        categories_query = create_query_part(ix_book, "categories", form["categories_all"], None, form["categories_any"], form["categories_not"])
-        
-        multi_query = []
-        if description_query: multi_query.append(description_query)
-        if title_query: multi_query.append(title_query) 
-        if author_query: multi_query.append(author_query)
-        if editorial_query: multi_query.append(editorial_query)
-        if collection_query: multi_query.append(collection_query)
-        if categories_query: multi_query.append(categories_query)
-        
-        comments_not_query = None
-        not_queries = None
-        all_query = None
-        exact_query = None
-        or_query = None
-        if comments:
-            all_query, exact_query, or_query, not_queries, comments_not_query = comments
-        
-        books = None
-        
-        for query in multi_query:
-            books = get_book_hits(ix_book, query, books)
-            if books and isinstance(books, bool):
-                books = Book.objects.none()
-                break
-        
-        queries = [all_query, exact_query, or_query, not_queries, comments_not_query]
-        all_hits, exact_hits, any_hits, not_hits, not_hits_books = get_comment_hits(queries, ix_comment)
-        hits = Comment.objects.none() if comments else None
-        
-        if all_hits:
-            hits = all_hits
-            
-        if exact_hits:
-            if hits:
-                hits = hits.filter(id__in=exact_hits)
-            else:
-                hits = exact_hits
-        
+    if exact_hits:
+        if hits:
+            hits = hits.filter(id__in=exact_hits)
+        else:
+            hits = exact_hits
+    
+    if not_hits:
+        if hits:
+            hits = hits.exclude(id__in=not_hits)
+        else:
+            hits = Book.objects.all().exclude(id__in=not_hits)
+    
+    if any_hits:
         if not_hits:
-            if hits:
-                hits = hits.exclude(id__in=not_hits)
-            else:
-                hits = Book.objects.all().exclude(id__in=not_hits)
-        
-        if any_hits:
-            if not_hits:
-                any_hits = any_hits.exclude(id__in=not_hits)
-            if hits:
-                hits = hits.union(any_hits)
-            else:
-                hits = any_hits     
-                
-        
-        if books and hits:
-            result = books.filter(id__in=hits)
-        elif books and not isinstance(hits, type(Comment.objects.none())):
-                result = books
-        elif hits and not isinstance(books, type(Book.objects.none())):
-                result = Book.objects.filter(id__in=hits)
-        
-        if not_hits_books and result:
-            result = result.exclude(id__in=not_hits_books)
-            if any_hits:
-                result = result.union(any_hits)
-        
-        try:
-            max_books = int(str(request.POST['max_books']).strip())
-        except ValueError:
-            max_books = MAX_VALUES[0]
-        
-        if max_books not in MAX_VALUES:
-            max_books = MAX_VALUES[0]
-        
-        if result:
-            result = result[:max_books]
+            any_hits = any_hits.exclude(id__in=not_hits)
+        if hits:
+            hits = hits.union(any_hits)
+        else:
+            hits = any_hits     
             
-        books_size = len(result)
+    
+    if books and hits:
+        result = books.filter(id__in=hits)
+    elif books and not isinstance(hits, type(Comment.objects.none())):
+            result = books
+    elif hits and not isinstance(books, type(Book.objects.none())):
+            result = Book.objects.filter(id__in=hits)
+    
+    if not_hits_books and result:
+        result = result.exclude(id__in=not_hits_books)
+        if any_hits:
+            result = result.union(any_hits)
+    
+    try:
+        max_book = int(str(request.GET['max_books']).strip())
+    except ValueError:
+        max_book = MAX_VALUES[0]
+    
+    if max_book not in MAX_VALUES:
+        max_book = MAX_VALUES[0]
+    
+    if result:
+        result = result[:max_book]
+        
+    books_size = len(result)
+    
+    try:
+        page_number = int(str(request.GET['page']).strip())
+    except KeyError:
+        page_number = 0
 
-    return render(request,  'search.html', {'books': result, 'max_books': MAX_VALUES, 'books_size': books_size, "form":form})
+    if len(result) % MAX_BOOKS_PER_PAGE == 0:
+        possible_pages = int(len(result) / MAX_BOOKS_PER_PAGE)
+    else:
+        possible_pages = int(len(result) / MAX_BOOKS_PER_PAGE) + 1
+
+    # Load books to show in view
+
+    for i in range(page_number * MAX_BOOKS_PER_PAGE,
+                page_number * MAX_BOOKS_PER_PAGE + MAX_BOOKS_PER_PAGE):
+        if i < len(result):
+            books_to_list.append(result[i])
+    
+    max_range, min_range = get_limits_pages(page_number, possible_pages)
+
+    return render(request,  'search.html', {'books': books_to_list, 'max_books': MAX_VALUES, 'max_book': max_book, 'books_size': books_size, "form":form,
+                                            "pages_range": range(0, possible_pages), "max_range": max_range, "min_range": min_range,
+                                            "current_page": page_number, "needs_pagination": possible_pages > 1,})
+    
+def get_limits_pages(page_number, possible_pages):
+    max_range = page_number+MAX_PAGES if page_number+MAX_PAGES <= possible_pages else possible_pages
+    min_range = page_number-MAX_PAGES if page_number-MAX_PAGES > 0 else 0
+    
+    if max_range-min_range != MAX_PAGES*2:
+        if (max_range - page_number) < MAX_PAGES:
+            min_range -= MAX_PAGES - (max_range-page_number)
+            min_range = min_range if min_range > 0 else 0
+        
+        if (page_number - min_range) < MAX_PAGES:
+            max_range += MAX_PAGES - (page_number-min_range)-1
+            max_range = max_range if max_range <= possible_pages else possible_pages
+    
+    return max_range, min_range
 
 def create_query_part(ix, field, query_all, query_exact, query_any, query_not, comments=False):
     
@@ -392,39 +432,39 @@ def get_final_query(queries, or_queries, not_queries):
 
 
 def create_form(request):
-    description_all = request.POST['description_all'].strip() if 'description_all' in request.POST else ""
-    description_exact = request.POST['description_exact'].strip() if 'description_exact' in request.POST else ""
-    description_any = request.POST['description_any'].strip() if 'description_any' in request.POST else ""
-    description_not = request.POST['description_not'].strip() if 'description_not' in request.POST else ""
+    description_all = request.GET['description_all'].strip() if 'description_all' in request.GET else ""
+    description_exact = request.GET['description_exact'].strip() if 'description_exact' in request.GET else ""
+    description_any = request.GET['description_any'].strip() if 'description_any' in request.GET else ""
+    description_not = request.GET['description_not'].strip() if 'description_not' in request.GET else ""
     
-    comments_all = request.POST['comments_all'].strip() if 'comments_all' in request.POST else ""
-    comments_exact = request.POST['comments_exact'].strip() if 'comments_exact' in request.POST else ""
-    comments_any = request.POST['comments_any'].strip() if 'comments_any' in request.POST else ""
-    comments_not = request.POST['comments_not'].strip() if 'comments_not' in request.POST else ""
+    comments_all = request.GET['comments_all'].strip() if 'comments_all' in request.GET else ""
+    comments_exact = request.GET['comments_exact'].strip() if 'comments_exact' in request.GET else ""
+    comments_any = request.GET['comments_any'].strip() if 'comments_any' in request.GET else ""
+    comments_not = request.GET['comments_not'].strip() if 'comments_not' in request.GET else ""
     
-    title_all = request.POST['title_all'].strip() if 'title_all' in request.POST else ""
-    title_exact = request.POST['title_exact'].strip() if 'title_exact' in request.POST else ""
-    title_any = request.POST['title_any'].strip() if 'title_any' in request.POST else ""
-    title_not = request.POST['title_not'].strip() if 'title_not' in request.POST else ""
+    title_all = request.GET['title_all'].strip() if 'title_all' in request.GET else ""
+    title_exact = request.GET['title_exact'].strip() if 'title_exact' in request.GET else ""
+    title_any = request.GET['title_any'].strip() if 'title_any' in request.GET else ""
+    title_not = request.GET['title_not'].strip() if 'title_not' in request.GET else ""
     
-    author_all = request.POST['author_all'].strip() if 'author_all' in request.POST else ""
-    author_exact = request.POST['author_exact'].strip() if 'author_exact' in request.POST else ""
-    author_any = request.POST['author_any'].strip() if 'author_any' in request.POST else ""
-    author_not = request.POST['author_not'].strip() if 'author_not' in request.POST else ""
+    author_all = request.GET['author_all'].strip() if 'author_all' in request.GET else ""
+    author_exact = request.GET['author_exact'].strip() if 'author_exact' in request.GET else ""
+    author_any = request.GET['author_any'].strip() if 'author_any' in request.GET else ""
+    author_not = request.GET['author_not'].strip() if 'author_not' in request.GET else ""
     
-    editorial_all = request.POST['editorial_all'].strip() if 'editorial_all' in request.POST else ""
-    editorial_exact = request.POST['editorial_exact'].strip() if 'editorial_exact' in request.POST else ""
-    editorial_any = request.POST['editorial_any'].strip() if 'editorial_any' in request.POST else ""
-    editorial_not = request.POST['editorial_not'].strip() if 'editorial_not' in request.POST else ""
+    editorial_all = request.GET['editorial_all'].strip() if 'editorial_all' in request.GET else ""
+    editorial_exact = request.GET['editorial_exact'].strip() if 'editorial_exact' in request.GET else ""
+    editorial_any = request.GET['editorial_any'].strip() if 'editorial_any' in request.GET else ""
+    editorial_not = request.GET['editorial_not'].strip() if 'editorial_not' in request.GET else ""
     
-    collection_all = request.POST['collection_all'].strip() if 'collection_all' in request.POST else ""
-    collection_exact = request.POST['collection_exact'].strip() if 'collection_exact' in request.POST else ""
-    collection_any = request.POST['collection_any'].strip() if 'collection_any' in request.POST else ""
-    collection_not = request.POST['collection_not'].strip() if 'collection_not' in request.POST else ""
+    collection_all = request.GET['collection_all'].strip() if 'collection_all' in request.GET else ""
+    collection_exact = request.GET['collection_exact'].strip() if 'collection_exact' in request.GET else ""
+    collection_any = request.GET['collection_any'].strip() if 'collection_any' in request.GET else ""
+    collection_not = request.GET['collection_not'].strip() if 'collection_not' in request.GET else ""
     
-    categories_all = request.POST['categories_all'].lower().strip() if 'categories_all' in request.POST else ""
-    categories_any = request.POST['categories_any'].lower().strip() if 'categories_any' in request.POST else ""
-    categories_not = request.POST['categories_not'].lower().strip() if 'categories_not' in request.POST else ""
+    categories_all = request.GET['categories_all'].lower().strip() if 'categories_all' in request.GET else ""
+    categories_any = request.GET['categories_any'].lower().strip() if 'categories_any' in request.GET else ""
+    categories_not = request.GET['categories_not'].lower().strip() if 'categories_not' in request.GET else ""
     
     form = {
         "description_all": description_all,

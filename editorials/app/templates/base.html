@@ -210,7 +210,7 @@
     </div>
 </div>
 <script>
-    if("{{ url_errors }}" !== "[]"){
+    if("{{ url_errors }}" !== "[]" and "{{ url_errors }}" !== ""){
         let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('scrape-modal'))
         modal.show();
     }
