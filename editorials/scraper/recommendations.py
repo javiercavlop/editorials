@@ -21,7 +21,7 @@ def load_categories_rs():
     shelf.close()
     timer.stop()
     print("El tiempo de ejecución ha sido de %f milisegundos" % (timer.get_time()))
-    
+
 def get_categories_recommendations(user_categories):
     shelf = shelve.open(CATEGORIES_RS)
     book_categories = shelf['similarities']
@@ -113,15 +113,9 @@ def get_ratings_recommendations(user):
     if int(user.id) not in Prefs:
         return None
     rankings = get_recommendations(Prefs, int(user.id))
-    books = []
-    ratings = []
     if not rankings:
         return None
-    for top in rankings:
-        books.append(Book.objects.get(pk=top[1]))
-        ratings.append(top[0])
-    print(list(zip(books, ratings)))
-    return sorted(list(zip(books, ratings)), lambda x: x[1], reverse=True)
+    return sorted(rankings, key=lambda x: x[0], reverse=True)
 
 def get_recommendations(prefs, person, similarity=sim_pearson):
     totals = {}
@@ -151,7 +145,6 @@ def transform_prefs(prefs):
             result[item][person] = prefs[person][item]
     return result
 
-
 def calculate_similar_items(prefs, n=10):
     result = {}
     itemPrefs = transform_prefs(prefs)
@@ -164,19 +157,14 @@ def calculate_similar_items(prefs, n=10):
     return result
 
 def get_books_recommendations(book):
-    # shelf = shelve.open(RATINGS_RS)
-    # Prefs = shelf['Prefs']
-    # shelf.close()
-    # rankings = get_recommendations(Prefs, int(user.id))#[:10]
-    # books = []
-    # ratings = []
-    # for re in rankings:
-    #     books.append(Book.objects.get(pk=re[1]))
-    #     ratings.append(re[0])
-    # items= zip(books, ratings)
+    shelf = shelve.open(RATINGS_RS)
+    ItemsPrefs = shelf['ItemsPrefs']
+    shelf.close()
+    rankings = get_top_matches(ItemsPrefs, int(book.id),n=10,similarity=sim_distance)
+    if not rankings:
+        return None
     
-    # return sorted(items, lambda x:x[1], reverse=True)
-    pass
+    return sorted(rankings, key=lambda x:x[1], reverse=True)
 
 def get_recommended_items(prefs, itemMatch, user):
     userRatings = prefs[user]

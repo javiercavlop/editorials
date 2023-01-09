@@ -15,6 +15,7 @@ import os
 MAX_BOOKS_PER_PAGE = 16
 MAX_PAGES = 5
 PROFILE_ERRORS = {}
+SUGGESTIONS = {}
 
 # ------------------------ Helpers ------------------------
 
@@ -82,21 +83,26 @@ def index(request):
     max_range, min_range = get_limits_pages(page_number, possible_pages)
 
     showcase_categories = []
-    if request.user.is_authenticated:
-        user_categories = set(Category.objects.filter(usercategory__users=request.user))
-        if user_categories:
-            categories_recommendations = get_categories_recommendations(user_categories)
-            showcase_categories = [Book.objects.get(id=book) for book in categories_recommendations][:10]
-        
     showcase_ratings = []
     if request.user.is_authenticated:
         user = User.objects.get(pk=request.user.id)
-        if os.path.exists(RATINGS_RS):
-            ratings_recommendations = get_ratings_recommendations(user)
-            print(ratings_recommendations)
-            if ratings_recommendations:
-                showcase_ratings = [Book.objects.get(id=book) for book, _ in ratings_recommendations]
-                print(showcase_ratings)
+        if user.username+"_index_showcase_ratings" in SUGGESTIONS:
+            showcase_ratings = SUGGESTIONS[user.username+"_index_showcase_ratings"]
+        else:
+            if os.path.exists(RATINGS_RS):
+                ratings_recommendations = get_ratings_recommendations(user)
+                if ratings_recommendations:
+                    showcase_ratings = [Book.objects.get(id=book_id) for _, book_id in ratings_recommendations]
+                    SUGGESTIONS[user.username+"_index_showcase_ratings"] = showcase_ratings
+        
+        user_categories = set(Category.objects.filter(usercategory__users=request.user))
+        if user_categories:
+            if user.username+"_index_showcase_categories" in SUGGESTIONS:
+                showcase_categories = SUGGESTIONS[user.username+"_index_showcase_categories"]
+            else:
+                categories_recommendations = get_categories_recommendations(user_categories)
+                showcase_categories = [Book.objects.get(id=book) for book in categories_recommendations][:10]
+                SUGGESTIONS[user.username+"_index_showcase_categories"] = showcase_categories
     
     # Load collections and categories
     
@@ -107,6 +113,7 @@ def index(request):
                                                   "all_books_size": all_books_size,
                                                   "books": books_to_list,
                                                   "showcase_categories": showcase_categories,
+                                                  "showcase_ratings": showcase_ratings,
                                                   "pages_range": range(0, possible_pages),
                                                   "max_range": max_range,
                                                   "min_range": min_range,
@@ -196,8 +203,8 @@ def login(request):
         return HttpResponseRedirect(reverse("app:signin"))
     
     user = authenticate(username=username, password=password)
-
-    if user is not None:
+    
+    if user:
         auth.login(request, user)
         return HttpResponseRedirect(reverse("app:index"))
     else:
@@ -439,15 +446,29 @@ def book_details(request, book_id):
     categories = book.categories.all()
     
     showcase_categories = []
-    book_categories = set(categories)
-    if book_categories and os.path.exists(RATINGS_RS):
-        categories_recommendations = get_categories_recommendations(book_categories)
-        showcase_categories = [Book.objects.get(id=b) for b in categories_recommendations if b != book.id][:10]
+
         
     showcase_ratings = []
-    ratings_recommendations = get_books_recommendations(book)
-    if ratings_recommendations:
-        showcase_ratings = [Book.objects.get(id=book) for book, _ in ratings_recommendations]
+    if "book_showcase_ratings" in SUGGESTIONS:
+        showcase_ratings = SUGGESTIONS["book_showcase_ratings"]
+    else:
+        ratings_recommendations = get_books_recommendations(book)
+        if ratings_recommendations:
+            showcase_ratings = [Book.objects.get(id=book) for _, book in ratings_recommendations]
+            SUGGESTIONS["book_showcase_ratings"] = showcase_ratings
+        
+    showcase_categories = []
+    if request.user.is_authenticated:
+        user = User.objects.get(pk=request.user.id)
+        if user.username+"_book_showcase_categories" in SUGGESTIONS:
+                showcase_categories = SUGGESTIONS[user.username+"_book_showcase_categories"]
+        else:
+            book_categories = set(categories)
+            if book_categories and os.path.exists(RATINGS_RS):
+                categories_recommendations = get_categories_recommendations(book_categories)
+                showcase_categories = [Book.objects.get(id=b) for b in categories_recommendations if b != book.id][:10]
+                SUGGESTIONS[user.username+"_book_showcase_categories"] = showcase_categories
+
 
     return render(request, "book_details.html",
                   context={"user": request.user, "book": book,

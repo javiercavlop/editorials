@@ -17,8 +17,8 @@ from whoosh import index, fields
 from whoosh.qparser import QueryParser, MultifieldParser, OrGroup, AndGroup
 from whoosh.query import Term, Or, And, Not
 from .whoosh_lib import BOOK_SCHEMA, COMMENT_SCHEMA
-import threading, shutil
-from app.views import MAX_BOOKS_PER_PAGE, MAX_PAGES
+import threading, shutil, os
+from app.views import MAX_BOOKS_PER_PAGE, MAX_PAGES, SUGGESTIONS
 from .recommendations import load_categories_rs, load_ratings_rs
 
 # ------------------------ Constants ------------------------
@@ -199,7 +199,9 @@ def clear_db(request):
         Rating.objects.all().delete()
         Comment.objects.all().delete()
         shutil.rmtree(settings.WHOOSH_INDEX_BOOK, ignore_errors=True)
+        os.makedirs(settings.WHOOSH_INDEX_BOOK, exist_ok=True)
         shutil.rmtree(settings.WHOOSH_INDEX_COMMENT, ignore_errors=True)
+        os.makedirs(settings.WHOOSH_INDEX_COMMENT, exist_ok=True)
     except Exception:
         messages.error(request, "Error al borrar los datos")
     finally:
@@ -213,13 +215,14 @@ def load_recommendations(request):
     if not request.user.is_superuser:
         return not_authenticated(request)
     
-    #try:
-    load_categories_rs()
-    load_ratings_rs()
-    # except Exception:
-    #     messages.error(request, "Error al cargar las recomendaciones")
-    # finally:
-    #     messages.success(request, "Se han cargado las recomendaciones correctamente")
+    try:
+        SUGGESTIONS.clear()
+        load_categories_rs()
+        load_ratings_rs()
+    except Exception:
+        messages.error(request, "Error al cargar las recomendaciones")
+    finally:
+        messages.success(request, "Se han cargado las recomendaciones correctamente")
     
     return HttpResponseRedirect(reverse('app:index'))
 
