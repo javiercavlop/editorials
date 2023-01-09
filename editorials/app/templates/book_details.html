@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="{% static 'css/index.css' %}">
     <link rel="stylesheet" href="{% static 'css/book_details.css' %}"
         xmlns="http://www.w3.org/1999/html">
-    <script type="text/javascript" src="{% static 'js/book_details.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -85,20 +84,37 @@
                     </div>
                 </div>
 
-                <h3 class="showcase-title">Otros libros que podrían interesarte</h3>
-
+                {% if showcase_categories %}
+                <h2 class="showcase-title">Libros similares según sus categorías</h2>
                 <showcase>
-                    {% for book in showcase_books %}
+                    {% for book in showcase_categories %}
 
                         <div class="showcase-element"> 
                         
-                            <img src="/static/{{book.cover}}" alt="{{book.title}}" />
-                            <a href="/book/{{book.id}}" class="add-to-cart-btn">Ver detalles</a>
+                            <img src="{{book.cover}}" alt="{{book.title}}" />
+                            <a href="{% url 'app:show_book' book.id %}" class="class-link">Ver libro</a>
 
                         </div>
                 
                     {% endfor %}
                 </showcase>
+                {% endif %}
+
+                {% if showcase_ratings %}
+                <h2 class="showcase-title">Libros similares según su valoración</h2>
+                <showcase>
+                    {% for book in showcase_ratings %}
+
+                        <div class="showcase-element"> 
+                        
+                            <img src="{{book.cover}}" alt="{{book.title}}" />
+                            <a href="{% url 'app:show_book' book.id %}" class="class-link">Ver libro</a>
+
+                        </div>
+                
+                    {% endfor %}
+                </showcase>
+                {% endif %}
 
                 <div class="comments-div">
                     {% if user.is_authenticated %}

@@ -54,3 +54,10 @@ class ProfilePicture(models.Model):
     
     def __str__(self):
         return f"ProfilePicture[image={self.image}, user={self.user}]"
+    
+class UserCategory(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    users = models.ManyToManyField(User, related_name='users')
+    
+    def __str__(self):
+        return f"UserCategory[category={self.category}, user={self.users}]"

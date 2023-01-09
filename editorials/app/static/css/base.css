@@ -255,6 +255,11 @@ footer{
     transition: 0.5s all;
 }
 
+#category-form > div.chosen-container{
+    width: 90% !important;
+    margin-top: 5% !important;
+}
+
 @media screen and (max-width: 991px) {
 
     .footer-content{

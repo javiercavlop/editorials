@@ -136,3 +136,6 @@ dmypy.json
 
 # Whoosh files
 **/data/index/
+
+# RS files
+**/data/**/**.dat

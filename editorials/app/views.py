@@ -4,9 +4,11 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponseNotFound, HttpResponseRedirect, \
     HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
-from .models import Book, Collection, Category, Rating, Comment, ProfilePicture
+from .models import Book, Collection, Category, Rating, Comment, ProfilePicture, UserCategory
 from django.contrib.auth.models import User
 from django.urls import reverse
+from scraper.recommendations import get_categories_recommendations, get_ratings_recommendations, get_books_recommendations, RATINGS_RS
+import os
 
 # ------------------------ Constants ------------------------
 
@@ -79,8 +81,22 @@ def index(request):
     
     max_range, min_range = get_limits_pages(page_number, possible_pages)
 
-                
-    showcase_books = []
+    showcase_categories = []
+    if request.user.is_authenticated:
+        user_categories = set(Category.objects.filter(usercategory__users=request.user))
+        if user_categories:
+            categories_recommendations = get_categories_recommendations(user_categories)
+            showcase_categories = [Book.objects.get(id=book) for book in categories_recommendations][:10]
+        
+    showcase_ratings = []
+    if request.user.is_authenticated:
+        user = User.objects.get(pk=request.user.id)
+        if os.path.exists(RATINGS_RS):
+            ratings_recommendations = get_ratings_recommendations(user)
+            print(ratings_recommendations)
+            if ratings_recommendations:
+                showcase_ratings = [Book.objects.get(id=book) for book, _ in ratings_recommendations]
+                print(showcase_ratings)
     
     # Load collections and categories
     
@@ -90,7 +106,7 @@ def index(request):
     return render(request, "index.html", context={"user": request.user,
                                                   "all_books_size": all_books_size,
                                                   "books": books_to_list,
-                                                  "showcase_books": showcase_books,
+                                                  "showcase_categories": showcase_categories,
                                                   "pages_range": range(0, possible_pages),
                                                   "max_range": max_range,
                                                   "min_range": min_range,
@@ -382,12 +398,34 @@ def edit_user(request):
 
     return HttpResponseRedirect(reverse("app:profile"))
 
+def categories(request):
+    if not request.user.is_authenticated:
+        return is_authenticated(request)
+    
+    if request.method == "POST":
+        user = User.objects.get(pk=request.user.id)
+        categories = request.POST.getlist("categories")
+        if categories:
+            for category in categories:
+                cat = Category.objects.get(id=int(category))
+                uc, _ = UserCategory.objects.get_or_create(category=cat)
+                if user not in uc.users.all():
+                    uc.users.add(user)
+                uc.save()
+                
+        user_categories = Category.objects.filter(usercategory__users=user)
+        deleted_categories = [cat for cat in user_categories if str(cat.id) not in categories]
+        
+        for uc in UserCategory.objects.filter(category__in=deleted_categories):
+            uc.users.remove(user)
+            uc.save()
+    
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
 # ------------------------ Books ------------------------
 
 def book_details(request, book_id):
     book = get_object_or_404(Book, pk=book_id)
-
-    in_wishlist = False
 
     average_rating = 0
     ratings = Rating.objects.filter(book=book)
@@ -399,13 +437,26 @@ def book_details(request, book_id):
 
     comments = Comment.objects.filter(book=book)
     categories = book.categories.all()
+    
+    showcase_categories = []
+    book_categories = set(categories)
+    if book_categories and os.path.exists(RATINGS_RS):
+        categories_recommendations = get_categories_recommendations(book_categories)
+        showcase_categories = [Book.objects.get(id=b) for b in categories_recommendations if b != book.id][:10]
+        
+    showcase_ratings = []
+    ratings_recommendations = get_books_recommendations(book)
+    if ratings_recommendations:
+        showcase_ratings = [Book.objects.get(id=book) for book, _ in ratings_recommendations]
 
     return render(request, "book_details.html",
                   context={"user": request.user, "book": book,
                             "categories": categories,
                             "suggested_books": None,
                             "average_rating": average_rating,
-                            "comments": comments, "in_wishlist": in_wishlist})
+                            "showcase_categories": showcase_categories,
+                            "showcase_ratings": showcase_ratings,
+                            "comments": comments,})
     
 # ------------------------ Comments ------------------------
 

@@ -67,19 +67,37 @@
     <div class="filters-background-div" id="filters-background"></div>
 
     <div class="main-content-container">
-
+        {% if showcase_categories %}
+        <h2 class="showcase-title">Libros recomendados según tus categorías preferidas</h2>
         <showcase>
-            {% for book in showcase_books %}
+            {% for book in showcase_categories %}
 
                 <div class="showcase-element"> 
                  
-                    <img src="/static/{{book.cover}}" alt="{{book.title}}" />
+                    <img src="{{book.cover}}" alt="{{book.title}}" />
                     <a href="{% url 'app:show_book' book.id %}" class="class-link">Ver libro</a>
 
                 </div>
         
             {% endfor %}
         </showcase>
+        {% endif %}
+
+        {% if showcase_ratings %}
+        <h2 class="showcase-title">Libros recomendados según tus valoraciones</h2>
+        <showcase>
+            {% for book in showcase_ratings %}
+
+                <div class="showcase-element"> 
+                 
+                    <img src="{{book.cover}}" alt="{{book.title}}" />
+                    <a href="{% url 'app:show_book' book.id %}" class="class-link">Ver libro</a>
+
+                </div>
+        
+            {% endfor %}
+        </showcase>
+        {% endif %}
 
         <div class="class-grid-container">
 

@@ -87,6 +87,9 @@ DATABASES = {
 WHOOSH_INDEX_BOOK = BASE_DIR / "data/index/book"
 WHOOSH_INDEX_COMMENT = BASE_DIR / "data/index/comment"
 
+RATINGS_DIR = BASE_DIR / "data/rs/ratings"
+CATEGORIES_DIR = BASE_DIR / "data/rs/categories"
+
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 

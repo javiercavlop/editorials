@@ -51,4 +51,10 @@ function populateDB(url){
     }
 };
 
+function loadRS(url){
+    if(confirm("¿Estás seguro de que quieres cargar el sistema de recomendación ahora? Este proceso puede tardar un rato")==true){
+        return window.location.href = url;
+    }
+};
+
 document.addEventListener("DOMContentLoaded", main_base);

@@ -19,6 +19,7 @@ from whoosh.query import Term, Or, And, Not
 from .whoosh_lib import BOOK_SCHEMA, COMMENT_SCHEMA
 import threading, shutil
 from app.views import MAX_BOOKS_PER_PAGE, MAX_PAGES
+from .recommendations import load_categories_rs, load_ratings_rs
 
 # ------------------------ Constants ------------------------
 
@@ -54,24 +55,9 @@ def populate_all(request):
                 threads.append(t)
         finally:
             for t in threads:
-                t.join()
-            
-            bulk_all()
-    
-        for scraper in reversed(scrapers):
-            try:
-                scraper.extract_data()
-            finally:
-                scraper.bulk_data()
-        
-        try:
-            penguin_scraper.extract_data(selenium=True)
-        finally:
-            penguin_scraper.bulk_data()
-            
+                t.join() 
     finally:
         bulk_all()
-        print("SUPUESTAMENTE HA TERMINADO COMPLETAMENTE")
         messages.success(request, "Se han añadido los libros correctamente")
     
     return HttpResponseRedirect(reverse('app:index'))
@@ -221,6 +207,22 @@ def clear_db(request):
     
     return HttpResponseRedirect(reverse('app:index'))
 
+# ------------------------ RS ------------------------
+
+def load_recommendations(request):
+    if not request.user.is_superuser:
+        return not_authenticated(request)
+    
+    #try:
+    load_categories_rs()
+    load_ratings_rs()
+    # except Exception:
+    #     messages.error(request, "Error al cargar las recomendaciones")
+    # finally:
+    #     messages.success(request, "Se han cargado las recomendaciones correctamente")
+    
+    return HttpResponseRedirect(reverse('app:index'))
+
 # ------------------------ Whoosh ------------------------
 def search(request):
     result = []
@@ -296,28 +298,28 @@ def search(request):
         if hits:
             hits = hits.exclude(id__in=not_hits)
         else:
-            hits = Book.objects.all().exclude(id__in=not_hits)
+            hits = Book.objects.all().exclude(id__in=not_hits).values_list("id", flat=True)
     
     if any_hits:
-        if not_hits:
-            any_hits = any_hits.exclude(id__in=not_hits)
+        if not_hits_books:
+            any_hits = any_hits.difference(not_hits_books)
+
         if hits:
             hits = hits.union(any_hits)
         else:
             hits = any_hits     
-            
     
     if books and hits:
         result = books.filter(id__in=hits)
     elif books and not isinstance(hits, type(Comment.objects.none())):
-            result = books
+        result = books
     elif hits and not isinstance(books, type(Book.objects.none())):
-            result = Book.objects.filter(id__in=hits)
+        result = Book.objects.filter(id__in=hits)
     
     if not_hits_books and result:
         result = result.exclude(id__in=not_hits_books)
         if any_hits:
-            result = result.union(any_hits)
+            result = result.union(Book.objects.all().filter(id__in=any_hits))
     
     try:
         max_book = int(str(request.GET['max_books']).strip())

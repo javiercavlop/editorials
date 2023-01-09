@@ -11,4 +11,5 @@ urlpatterns = [
     path('clear', views.clear_db, name='clear'),
     path('search', views.search, name='search'),
     path('populate/one', views.populate_one, name='populate_one'),
+    path('load', views.load_recommendations, name='load_recommendations'),
 ]

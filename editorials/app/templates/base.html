@@ -11,6 +11,9 @@
     <link rel="icon" type="image/vnd.microsoft.icon" href="{% static 'images/favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/global.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+	<link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet"/>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
           rel="stylesheet"
@@ -75,6 +78,12 @@
                                         </a>
                                     </li>
                                     <li><a class="dropdown-item"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#category-modal">
+                                            <img height="20px" width="20px" src="{% static 'images/star.png' %}" alt="Buscador"/>  Categorías favoritas
+                                        </a>
+                                    </li>
+                                    <li><a class="dropdown-item"
                                             href="{% url 'scraper:search' %}">
                                             <img height="20px" width="20px" src="{% static 'images/clue.png' %}" alt="Buscador"/>  Búsqueda avanzada
                                         </a>
@@ -112,6 +121,11 @@
                                             data-bs-toggle="modal"
                                             data-bs-target="#scrape-modal">
                                              <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Extrae un libro por url
+                                            </button>
+                                        </li>
+                                        <li><button class="dropdown-item"
+                                            onclick="loadRS('{% url 'scraper:load_recommendations' %}')">
+                                             <img height="20px" width="20px" src="{% static 'images/shield.png' %}" alt="Escudo"/> Carga el sistema de recomendación
                                             </button>
                                         </li>
                                         <li><button class="dropdown-item"
@@ -170,6 +184,50 @@
 {% block content %}
 {% endblock %}
 
+{% if request.user.is_authenticated %}
+<div class="modal fade" id="category-modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                    <h5 class="modal-title"
+                        id="add-category-modal-label">
+                        Escoge tus categorías favoritas:</h5>
+                    <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="class-profile-form">
+                <form class="class-form" action="{% url 'app:categories' %}" method="POST">
+					{% csrf_token %}
+                    <div id="category-form" class="d-flex justify-content-center align-items-center w-100">
+                        <select data-placeholder="Escribe aquí para filtrar..." multiple class="chosen-select" name="categories">
+                            <option value=""></option>
+                            {% for category in categories %}
+                                {% if category in user_categories %}
+                                    <option value="{{ category.id }}" selected>{{ category.name }}</option>
+                                {% else %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center class-profile-div-btn">
+                        <button id="category_btn" class="class-link class-profile-btn mt-4 mb-3" type="submit">Actualizar preferencias</button>
+                    </div>
+				</form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(".chosen-select").chosen({
+		no_results_text: "Oops, nothing found!"
+	  })
+</script>
+{% endif %}
+
+
 {% if request.user.is_superuser %}
 <div class="modal fade" id="scrape-modal">
     <div class="modal-dialog modal-dialog-centered">
@@ -188,9 +246,9 @@
                     {% csrf_token %} 
                     <div class="d-flex flex-column align-items-center w-100">
                         {% if url_errors %}
-                        <div class="class-form-group w-75 class-error-form" id="url_form">
+                        <div style="width:90%" class="class-form-group class-error-form" id="url_form">
                         {% else %}
-                        <div class="class-form-group w-75" id="url_form">
+                        <div style="width:90%" class="class-form-group" id="url_form">
                         {% endif %}
                             <input class="class-form-input"type="url" id="url" name="url" placeholder=" " value="{{ url }}" required>
                             <label for="url" class="class-form-label">Url del libro a extraer:</label>
