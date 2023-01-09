@@ -36,6 +36,10 @@ section{
     margin-right: 5px;
 }
 
+#search-form > div > div > div > div > input::placeholder{
+    font-style: italic;
+}
+
 /* MOBILE */
 
 @media screen and (max-width: 991px) {

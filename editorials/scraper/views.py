@@ -349,8 +349,7 @@ def search(request):
 
     # Load books to show in view
 
-    for i in range(page_number * MAX_BOOKS_PER_PAGE,
-                page_number * MAX_BOOKS_PER_PAGE + MAX_BOOKS_PER_PAGE):
+    for i in range(page_number * MAX_BOOKS_PER_PAGE, page_number * MAX_BOOKS_PER_PAGE + MAX_BOOKS_PER_PAGE):
         if i < len(result):
             books_to_list.append(result[i])
     

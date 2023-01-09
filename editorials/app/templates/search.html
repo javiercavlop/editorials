@@ -21,10 +21,10 @@
                             <strong style="margin-right:10px">Máximo de resultados a mostrar:</strong>
                             <select id="max_books" name="max_books">
                                 {% for max in max_books %}
-                                    {% if max != max_book %}
-                                        <option value="{{max}}">{{max}}</option>
-                                    {% else %}
+                                    {% if max == max_book %}
                                         <option value="{{max}}" selected>{{max}}</option>
+                                    {% else %}
+                                        <option value="{{max}}">{{max}}</option>
                                     {% endif %}
                                 {% endfor %}
                             </select>
@@ -36,19 +36,19 @@
                             <div class="d-flex flex-column align-items-center">
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-3">
                                     <label for="description_all">con <strong>todas</strong> las palabras:</label>
-                                    <input type="text" id="description_all" name="description_all" value="{{form.description_all}}">
+                                    <input type="text" id="description_all" name="description_all" value="{{form.description_all}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="description_exact">con la <strong>frase exacta</strong>:</label>
-                                    <input type="text" id="description_exact" name="description_exact" value="{{form.description_exact}}">
+                                    <input type="text" id="description_exact" name="description_exact" value="{{form.description_exact}}" placeholder="Escríbala tal cual">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="description_any">con <strong>alguna</strong> de las palabras:</label>
-                                    <input type="text" id="description_any" name="description_any" value="{{form.description_any}}">
+                                    <input type="text" id="description_any" name="description_any" value="{{form.description_any}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="description_not"><strong>sin</strong> las palabras:</label>
-                                    <input type="text" id="description_not" name="description_not" value="{{form.description_not}}">
+                                    <input type="text" id="description_not" name="description_not" value="{{form.description_not}}" placeholder="Para separar use espacios">
                                 </div>
                             </div>
                         </div>
@@ -57,19 +57,19 @@
                             <div class="d-flex flex-column align-items-center">
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-3">
                                     <label for="comments_all">con <strong>todas</strong> las palabras:</label>
-                                    <input type="text" id="comments_all" name="comments_all" value="{{form.comments_all}}">
+                                    <input type="text" id="comments_all" name="comments_all" value="{{form.comments_all}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="comments_exact">con la <strong>frase exacta</strong>:</label>
-                                    <input type="text" id="comments_exact" name="comments_exact" value="{{form.comments_exact}}">
+                                    <input type="text" id="comments_exact" name="comments_exact" value="{{form.comments_exact}}" placeholder="Escríbala tal cual">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="comments_any">con <strong>alguna</strong> de las palabras:</label>
-                                    <input type="text" id="comments_any" name="comments_any" value="{{form.comments_any}}">
+                                    <input type="text" id="comments_any" name="comments_any" value="{{form.comments_any}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="comments_not"><strong>sin</strong> las palabras:</label>
-                                    <input type="text" id="comments_not" name="comments_not" value="{{form.comments_not}}">
+                                    <input type="text" id="comments_not" name="comments_not" value="{{form.comments_not}}" placeholder="Para separar use espacios">
                                 </div>
                             </div>
                         </div>
@@ -80,19 +80,19 @@
                             <div class="d-flex flex-column align-items-center">
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-3">
                                     <label for="title_all">con <strong>todas</strong> las palabras:</label>
-                                    <input type="text" id="title_all" name="title_all" value="{{form.title_all}}">
+                                    <input type="text" id="title_all" name="title_all" value="{{form.title_all}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="title_exact">con la <strong>frase exacta</strong>:</label>
-                                    <input type="text" id="title_exact" name="title_exact" value="{{form.title_exact}}">
+                                    <input type="text" id="title_exact" name="title_exact" value="{{form.title_exact}}" placeholder="Escríbala tal cual">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="title_any">con <strong>alguna</strong> de las palabras:</label>
-                                    <input type="text" id="title_any" name="title_any" value="{{form.title_any}}">
+                                    <input type="text" id="title_any" name="title_any" value="{{form.title_any}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="title_not"><strong>sin</strong> las palabras:</label>
-                                    <input type="text" id="title_not" name="title_not" value="{{form.title_not}}">
+                                    <input type="text" id="title_not" name="title_not" value="{{form.title_not}}" placeholder="Para separar use espacios">
                                 </div>
                             </div>
                         </div>
@@ -101,19 +101,19 @@
                             <div class="d-flex flex-column align-items-center">
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-3">
                                     <label for="author_all">con <strong>todas</strong> las palabras:</label>
-                                    <input type="text" id="author_all" name="author_all" value="{{form.author_all}}">
+                                    <input type="text" id="author_all" name="author_all" value="{{form.author_all}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="author_exact">con la <strong>frase exacta</strong>:</label>
-                                    <input type="text" id="author_exact" name="author_exact" value="{{form.author_exact}}">
+                                    <input type="text" id="author_exact" name="author_exact" value="{{form.author_exact}}" placeholder="Escríbala tal cual">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="author_any">con <strong>alguna</strong> de las palabras:</label>
-                                    <input type="text" id="author_any" name="author_any" value="{{form.author_any}}">
+                                    <input type="text" id="author_any" name="author_any" value="{{form.author_any}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="author_not"><strong>sin</strong> las palabras:</label>
-                                    <input type="text" id="author_not" name="author_not" value="{{form.author_not}}">
+                                    <input type="text" id="author_not" name="author_not" value="{{form.author_not}}" placeholder="Para separar use espacios">
                                 </div>
                             </div>
                         </div>
@@ -124,19 +124,19 @@
                             <div class="d-flex flex-column align-items-center">
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-3">
                                     <label for="editorial_all">con <strong>todas</strong> las palabras:</label>
-                                    <input type="text" id="editorial_all" name="editorial_all" value="{{form.editorial_all}}">
+                                    <input type="text" id="editorial_all" name="editorial_all" value="{{form.editorial_all}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="editorial_exact">con la <strong>frase exacta</strong>:</label>
-                                    <input type="text" id="editorial_exact" name="editorial_exact" value="{{form.editorial_exact}}">
+                                    <input type="text" id="editorial_exact" name="editorial_exact" value="{{form.editorial_exact}}" placeholder="Escríbala tal cual">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="editorial_any">con <strong>alguna</strong> de las palabras:</label>
-                                    <input type="text" id="editorial_any" name="editorial_any" value="{{form.editorial_any}}">
+                                    <input type="text" id="editorial_any" name="editorial_any" value="{{form.editorial_any}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="editorial_not"><strong>sin</strong> las palabras:</label>
-                                    <input type="text" id="editorial_not" name="editorial_not" value="{{form.editorial_not}}">
+                                    <input type="text" id="editorial_not" name="editorial_not" value="{{form.editorial_not}}" placeholder="Para separar use espacios">
                                 </div>
                             </div>
                         </div>
@@ -145,19 +145,19 @@
                             <div class="d-flex flex-column align-items-center">
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-3">
                                     <label for="collection_all">con <strong>todas</strong> las palabras:</label>
-                                    <input type="text" id="collection_all" name="collection_all" value="{{form.collection_all}}">
+                                    <input type="text" id="collection_all" name="collection_all" value="{{form.collection_all}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="collection_exact">con la <strong>frase exacta</strong>:</label>
-                                    <input type="text" id="collection_exact" name="collection_exact" value="{{form.collection_exact}}">
+                                    <input type="text" id="collection_exact" name="collection_exact" value="{{form.collection_exact}}" placeholder="Escríbala tal cual">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="collection_any">con <strong>alguna</strong> de las palabras:</label>
-                                    <input type="text" id="collection_any" name="collection_any" value="{{form.collection_any}}">
+                                    <input type="text" id="collection_any" name="collection_any" value="{{form.collection_any}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="collection_not"><strong>sin</strong> las palabras:</label>
-                                    <input type="text" id="collection_not" name="collection_not" value="{{form.collection_not}}">
+                                    <input type="text" id="collection_not" name="collection_not" value="{{form.collection_not}}" placeholder="Para separar use espacios">
                                 </div>
                             </div>
                         </div>
@@ -166,15 +166,15 @@
                             <div class="d-flex flex-column align-items-center">
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-3">
                                     <label for="categories_all">con <strong>todas</strong> las palabras:</label>
-                                    <input type="text" id="categories_all" name="categories_all" value="{{form.categories_all}}">
+                                    <input type="text" id="categories_all" name="categories_all" value="{{form.categories_all}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="categories_any">con <strong>alguna</strong> de las palabras:</label>
-                                    <input type="text" id="categories_any" name="categories_any" value="{{form.categories_any}}">
+                                    <input type="text" id="categories_any" name="categories_any" value="{{form.categories_any}}" placeholder="Para separar use espacios">
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center w-100 mt-2">
                                     <label for="categories_not"><strong>sin</strong> las palabras:</label>
-                                    <input type="text" id="categories_not" name="categories_not" value="{{form.categories_not}}">
+                                    <input type="text" id="categories_not" name="categories_not" value="{{form.categories_not}}" placeholder="Para separar use espacios">
                                 </div>
                             </div>
                         </div>
