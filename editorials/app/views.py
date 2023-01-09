@@ -449,25 +449,29 @@ def book_details(request, book_id):
 
         
     showcase_ratings = []
-    if "book_showcase_ratings" in SUGGESTIONS:
-        showcase_ratings = SUGGESTIONS["book_showcase_ratings"]
+    if str(book.id)+"_book_showcase_ratings" in SUGGESTIONS:
+        showcase_ratings = SUGGESTIONS[str(book.id)+"_book_showcase_ratings"]
     else:
-        ratings_recommendations = get_books_recommendations(book)
-        if ratings_recommendations:
-            showcase_ratings = [Book.objects.get(id=book) for _, book in ratings_recommendations]
-            SUGGESTIONS["book_showcase_ratings"] = showcase_ratings
+        try:
+            ratings_recommendations = get_books_recommendations(book)
+        except Exception:
+            ratings_recommendations = []
+        finally:
+            if ratings_recommendations:
+                showcase_ratings = [Book.objects.get(id=book) for _, book in ratings_recommendations]
+                SUGGESTIONS[str(book.id)+"_book_showcase_ratings"] = showcase_ratings
         
     showcase_categories = []
     if request.user.is_authenticated:
         user = User.objects.get(pk=request.user.id)
-        if user.username+"_book_showcase_categories" in SUGGESTIONS:
-                showcase_categories = SUGGESTIONS[user.username+"_book_showcase_categories"]
+        if user.username+str(book.id)+"_book_showcase_categories" in SUGGESTIONS:
+                showcase_categories = SUGGESTIONS[user.username+str(book.id)+"_book_showcase_categories"]
         else:
             book_categories = set(categories)
             if book_categories and os.path.exists(RATINGS_RS):
                 categories_recommendations = get_categories_recommendations(book_categories)
                 showcase_categories = [Book.objects.get(id=b) for b in categories_recommendations if b != book.id][:10]
-                SUGGESTIONS[user.username+"_book_showcase_categories"] = showcase_categories
+                SUGGESTIONS[user.username+str(book.id)+"_book_showcase_categories"] = showcase_categories
 
 
     return render(request, "book_details.html",

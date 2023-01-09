@@ -25,6 +25,6 @@ def global_context(request):
             return {'url': url, 'url_errors': url_errors, 'categories': categories, 'user_categories': user_categories}
     
     if request.user.is_authenticated and request.method == "GET":
-        return {'categories': categories, 'user_categories': user_categories}
+        return {'categories_form': categories, 'user_categories_form': user_categories}
         
     return {}

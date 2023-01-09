@@ -412,7 +412,7 @@ def get_comment_hits(queries, ix_comment):
     for query in queries:
         if query:
             comment_searcher = ix_comment.searcher()
-            comment_hits = comment_searcher.search(query)
+            comment_hits = comment_searcher.search(query, limit=None)
             if comment_hits.docs():
                 hits = [int(hit['id']) for hit in comment_hits]
                 comment_books = Comment.objects.filter(id__in=hits).values_list('book', flat=True)
@@ -503,7 +503,7 @@ def create_form(request):
 
 def get_book_hits(ix_book, query, books):
     book_searcher = ix_book.searcher()
-    book_hits = book_searcher.search(query)
+    book_hits = book_searcher.search(query, limit=None)
     if book_hits.docs():
         hits = [int(hit['id']) for hit in book_hits]
         if books:

@@ -203,8 +203,8 @@
                     <div id="category-form" class="d-flex justify-content-center align-items-center w-100">
                         <select data-placeholder="Escribe aquí para filtrar..." multiple class="chosen-select" name="categories">
                             <option value=""></option>
-                            {% for category in categories %}
-                                {% if category in user_categories %}
+                            {% for category in categories_form %}
+                                {% if category in user_categories_form %}
                                     <option value="{{ category.id }}" selected>{{ category.name }}</option>
                                 {% else %}
                                     <option value="{{ category.id }}">{{ category.name }}</option>
